@@ -390,6 +390,7 @@ function tenterPartie(joueurs){
   EQUIPES.forEach(eq => { const m = membres(eq); if(m.length >= 2) espions[eq] = m[Math.floor(Math.random() * m.length)].cle; });
 
   const paires = new Set(), solos = new Set(), missionsEquipe = {};
+  const modelesEquipe = new Set();   // formules réservées aux missions d'équipe
   const soloLibre = () => {
     const libres = SOLOS.map((_, i) => i).filter(i => !solos.has(i));
     if(!libres.length) return null;
@@ -402,7 +403,8 @@ function tenterPartie(joueurs){
       const m = Math.floor(Math.random() * MODELES.length);
       const c = adv[Math.floor(Math.random() * adv.length)];
       if(paires.has(m + "|" + c.cle)) return null;
-      paires.add(m + "|" + c.cle);
+      if(modelesEquipe.has(m)) return null;
+      paires.add(m + "|" + c.cle); modelesEquipe.add(m);
       missionsEquipe[eq] = remplir(MODELES[m], c.nom);
     } else {
       const s = soloLibre(); if(!s) return null;
@@ -414,6 +416,7 @@ function tenterPartie(joueurs){
     const perso = [];
     for(const m of melanger(MODELES.map((_, i) => i))){
       if(perso.length === N_CIBLEES) break;
+      if(modelesEquipe.has(m)) continue;
       const c = melanger(joueurs.filter(x => x.cle !== j.cle)).find(x => !paires.has(m + "|" + x.cle));
       if(!c) continue;
       paires.add(m + "|" + c.cle);

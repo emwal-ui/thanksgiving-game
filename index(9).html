@@ -1,0 +1,990 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dinde ou Patate ?</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --fond:#fff6e9; --encre:#3a2416; --doux:#8a6d55; --ligne:#ecdcc4; --carte:#fff;
+  --dinde:#d9572b; --dinde-fonce:#a83d18; --patate:#b8862f; --patate-fonce:#86601d;
+  --ok:#3f9150; --ombre:0 6px 0 rgba(58,36,22,.12);
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{
+  font-family:"Fredoka",system-ui,-apple-system,sans-serif; color:var(--encre); background:var(--fond);
+  background-image:radial-gradient(circle at 8% 6%,#ffe3c4 0,transparent 32%),
+                   radial-gradient(circle at 95% 90%,#fbdcbc 0,transparent 38%);
+  background-attachment:fixed; min-height:100vh;
+}
+main{max-width:680px;margin:0 auto;padding:22px 16px 80px}
+main.large{max-width:1240px}
+h1{font-size:2rem;margin:0 0 6px;line-height:1.1;text-wrap:balance}
+h2{margin:0 0 8px;font-size:1.35rem}
+p{line-height:1.45}
+a{color:var(--dinde-fonce)}
+.sous{color:var(--doux);margin:0 0 16px}
+.centre{text-align:center}
+.carte{background:var(--carte);border:2px solid var(--ligne);border-radius:20px;padding:18px;margin-bottom:16px;box-shadow:var(--ombre)}
+label{font-weight:600}
+input{font:inherit;width:100%;padding:14px 16px;border-radius:14px;border:2px solid var(--ligne);font-size:1.15rem;background:#fffdf9;outline:none;margin-top:8px}
+input:focus{border-color:var(--dinde)}
+button{font:inherit;cursor:pointer;border:0;border-radius:14px;padding:13px 20px;font-weight:600;font-size:1.05rem;
+  background:var(--encre);color:#fff;box-shadow:0 4px 0 rgba(0,0,0,.25);transition:transform .08s,box-shadow .08s}
+button:active{transform:translateY(3px);box-shadow:0 1px 0 rgba(0,0,0,.25)}
+button.Dinde{background:var(--dinde)} button.Patate{background:var(--patate)}
+button.fantome{background:#fff;color:var(--encre);border:2px solid var(--ligne);box-shadow:none}
+button.danger{background:#fff;color:#b3261e;border:2px solid #f0c4c0;box-shadow:none}
+button:disabled{opacity:.5;cursor:default}
+.erreur{color:#b3261e;min-height:1.3em;margin:10px 0 0}
+.duo{display:flex;justify-content:center;gap:6px;margin:4px 0 8px}
+.bob{display:inline-block;animation:bob 2.4s ease-in-out infinite}
+.bob2{display:inline-block;animation:bob 2.4s ease-in-out -1.2s infinite}
+@keyframes bob{0%,100%{transform:translateY(0) rotate(-3deg)}50%{transform:translateY(-8px) rotate(3deg)}}
+.pop{animation:pop .5s ease both}
+@keyframes pop{0%{transform:scale(.6);opacity:0}70%{transform:scale(1.07);opacity:1}100%{transform:scale(1)}}
+.secoue{animation:secoue .45s}
+@keyframes secoue{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-8px)}40%,80%{transform:translateX(8px)}}
+
+/* Roue */
+.roue-zone{position:relative;width:300px;height:300px;margin:18px auto 22px}
+.fleche{position:absolute;left:50%;top:-18px;transform:translateX(-50%);z-index:2;filter:drop-shadow(0 3px 0 rgba(0,0,0,.2))}
+#roue{width:300px;height:300px;border-radius:50%;box-shadow:0 0 0 8px #fff,0 0 0 12px var(--encre),0 12px 0 12px rgba(0,0,0,.12);
+  transition:transform 5.2s cubic-bezier(.12,.75,.12,1)}
+
+/* Bandeau d'équipe */
+.bandeau{display:flex;align-items:center;gap:14px;border-radius:22px;padding:14px 18px;margin-bottom:16px;color:#fff;box-shadow:var(--ombre)}
+.bandeau.Dinde{background:linear-gradient(135deg,var(--dinde),var(--dinde-fonce))}
+.bandeau.Patate{background:linear-gradient(135deg,var(--patate),var(--patate-fonce))}
+.bandeau h1{font-size:1.75rem}
+.jauge{height:14px;background:rgba(255,255,255,.3);border-radius:99px;overflow:hidden;margin-top:8px}
+.jauge>div{height:100%;background:#fff;border-radius:99px;transition:width .6s}
+
+/* Missions */
+.mission{display:flex;gap:12px;align-items:center;padding:12px 2px;border-bottom:2px dashed var(--ligne)}
+.mission:last-child{border-bottom:0}
+.mission .num{font-weight:700;color:var(--doux);min-width:1.5em;text-align:right}
+.mission .txt{flex:1}
+.case{flex:0 0 42px;width:42px;height:42px;border-radius:12px;border:3px solid var(--encre);background:#fff;padding:0;box-shadow:none;
+  color:#fff;font-size:22px;display:flex;align-items:center;justify-content:center}
+.case.ok{background:var(--ok);border-color:var(--ok)}
+.mission.faite .txt{text-decoration:line-through;text-decoration-thickness:2px;opacity:.5}
+
+/* Espion */
+.dossier{background:#2c2b36;color:#f3eee6;border-radius:20px;padding:16px 18px;margin-bottom:16px;box-shadow:var(--ombre)}
+.dossier button{background:#f3eee6;color:#2c2b36}
+.tampon{display:inline-block;border:3px solid #ef6461;color:#ef6461;padding:2px 12px;border-radius:8px;transform:rotate(-6deg);font-weight:700;letter-spacing:.12em}
+.intel{background:#3a3946;border-radius:14px;padding:12px 14px;margin:12px 0;font-size:1.1rem}
+
+/* Fenêtre */
+.modal{position:fixed;inset:0;background:rgba(40,24,12,.55);display:none;align-items:center;justify-content:center;padding:16px;z-index:10}
+.modal.ouvert{display:flex}
+.boite{background:#fff;border-radius:26px;padding:22px;max-width:400px;width:100%;text-align:center;animation:pop .35s ease}
+.bulle{position:relative;background:var(--fond);border:2px solid var(--ligne);border-radius:18px;padding:14px;margin:8px 0 18px;font-size:1.12rem}
+.bulle:before{content:"";position:absolute;top:-12px;left:50%;transform:translateX(-50%);border:10px solid transparent;border-bottom-color:var(--ligne);border-top:0}
+.boutons{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+
+/* Vote */
+.choix{display:flex;gap:12px;align-items:center;padding:12px;border:2px solid var(--ligne);border-radius:14px;margin-bottom:8px;cursor:pointer;background:#fffdf9}
+.choix .rond{flex:0 0 22px;height:22px;border-radius:50%;border:3px solid var(--encre)}
+.choix.actif{border-color:var(--encre);background:#fff0dc}
+.choix.actif .rond{background:var(--encre);box-shadow:inset 0 0 0 3px #fff}
+.puces{display:flex;flex-wrap:wrap;gap:8px}
+.puce{background:#fff;color:var(--encre);border:2px solid var(--ligne);box-shadow:none;padding:10px 18px;border-radius:99px}
+.puce.actif{background:var(--encre);color:#fff;border-color:var(--encre)}
+
+details.carte summary{cursor:pointer;font-weight:600;font-size:1.1rem}
+details.carte li{margin:6px 0;line-height:1.4}
+
+/* Écran de projection */
+.ecran-titre{text-align:center;font-size:3.2rem;margin:6px 0 2px}
+.etat{text-align:center;font-size:1.5rem;color:var(--doux);margin:0 0 26px}
+.equipes{display:grid;grid-template-columns:1fr 1fr;gap:26px}
+.equipe{border-radius:30px;padding:26px 20px;text-align:center;color:#fff;box-shadow:0 10px 0 rgba(0,0,0,.14)}
+.equipe.Dinde{background:linear-gradient(160deg,var(--dinde),var(--dinde-fonce))}
+.equipe.Patate{background:linear-gradient(160deg,var(--patate),var(--patate-fonce))}
+.equipe h2{font-size:2.2rem;margin:4px 0 0}
+.equipe .score{font-size:6.5rem;font-weight:700;line-height:1;margin:6px 0}
+.equipe.flash{animation:flash 1.1s}
+@keyframes flash{0%{transform:scale(1)}25%{transform:scale(1.07) rotate(-1deg)}55%{transform:scale(.98)}100%{transform:scale(1)}}
+.fil{margin-top:26px}
+.fil ul{list-style:none;padding:0;margin:0;font-size:1.25rem}
+.fil li{padding:8px 0;border-bottom:2px dashed var(--ligne)}
+.fil li:last-child{border-bottom:0}
+.pastille{display:inline-block;width:14px;height:14px;border-radius:50%;margin-right:8px;vertical-align:middle}
+.teaser{text-align:center;font-size:1.3rem;color:var(--doux);margin-top:22px;font-style:italic}
+.revel{text-align:center}
+.revel h1{font-size:3rem;margin-bottom:18px}
+.revel .grande{font-size:1.7rem;line-height:1.35}
+.revel .dossier{text-align:center}
+.revel .equipe{text-align:center}
+table{width:100%;border-collapse:collapse;font-size:1.25rem}
+td,th{padding:12px 10px;border-bottom:2px solid var(--ligne);text-align:left}
+td.n,th.n{text-align:right}
+tr.total td{font-weight:700;font-size:1.5rem;border-bottom:0}
+.admin-table{font-size:1rem}
+.admin-table td,.admin-table th{padding:8px 6px}
+#confetti{position:fixed;inset:0;pointer-events:none;z-index:20;width:100%;height:100%}
+@media(max-width:760px){.equipes{grid-template-columns:1fr}.equipe .score{font-size:4.5rem}.ecran-titre{font-size:2.2rem}}
+</style>
+</head>
+<body>
+<canvas id="confetti"></canvas>
+<main id="app"></main>
+<div class="modal" id="modal"><div class="boite" id="boite"></div></div>
+
+<script>
+/* =====================================================================
+   CONFIGURATION : collez ici les informations de votre projet Supabase
+   (Supabase > Project Settings > API)
+   ===================================================================== */
+const CONFIG = {
+  SUPABASE_URL: "https://aprsqhzpfuhzptpbtxxs.supabase.co",
+  SUPABASE_CLE: "sb_publishable_7YvK1KqzfgqW4-AHMs4Gxg_RQiogkQk"
+};
+
+/* =====================================================================
+   CONTENU DU JEU (modifiable)
+   ===================================================================== */
+const EQUIPES = ["Dinde", "Patate"];
+const N_CIBLEES = 7;   // missions personnelles visant un invité
+const N_SOLO = 2;      // missions personnelles sans cible
+                       // + 1 mission d'équipe cachée = 10 missions
+
+// [X] est remplacé par le prénom d'un invité
+const MODELES = [
+  "Faire prononcer le mot « dinde » à [X].",
+  "Faire raconter à [X] son meilleur souvenir de vacances.",
+  "Faire deviner à [X] un métier que vous inventez.",
+  "Faire raconter à [X] son tout premier job.",
+  "Faire rire [X] aux éclats.",
+  "Faire dire à [X] que le plat est « vraiment bon ».",
+  "Recevoir un surnom de la part de [X].",
+  "Découvrir le nom du premier animal de [X].",
+  "Faire parler [X] d’un projet pour l’année prochaine.",
+  "Faire se lever [X] de sa chaise.",
+  "Découvrir le film de Noël préféré de [X].",
+  "Obtenir de [X] la recette de son plat fétiche.",
+  "Trinquer avec [X] sans raison particulière.",
+  "Faire fredonner une chanson à [X].",
+  "Demander à [X] un conseil sur un sujet absurde, et l’obtenir.",
+  "Faire imiter un animal à [X]."
+];
+
+// Missions sans cible (une partie sert aussi de missions d'équipe)
+const SOLOS = [
+  "Placer le mot « cornemuse » dans une conversation.",
+  "Lancer un débat : la purée est-elle un plat ou un accompagnement ?",
+  "Faire applaudir au moins trois personnes en même temps.",
+  "Recevoir deux compliments sur votre tenue.",
+  "Faire dire « Thanksgiving » à deux personnes différentes.",
+  "Lancer une conversation sur les extraterrestres.",
+  "Raconter une fausse anecdote et la faire croire à quelqu’un.",
+  "Vous faire resservir à boire sans le demander.",
+  "Faire prononcer le mot « canneberge » à quelqu’un.",
+  "Faire parler quelqu’un de son signe astrologique.",
+  "Obtenir que quelqu’un vous demande l’heure.",
+  "Faire porter un toast à quelqu’un d’autre que vous.",
+  "Faire changer quelqu’un de place.",
+  "Lancer un « tu préfères… ? » avec au moins deux personnes.",
+  "Faire dire « c’était mieux avant » à quelqu’un.",
+  "Dire trois fois « magnifique » sans que personne ne le remarque.",
+  "Faire goûter à quelqu’un un plat qu’il n’avait pas pris.",
+  "Obtenir qu’on vous passe le sel sans le demander.",
+  "Faire raconter un rêve étrange à quelqu’un.",
+  "Glisser une réplique de film culte dans la conversation.",
+  "Faire dire « oh là là » à quelqu’un.",
+  "Obtenir que quelqu’un prenne une photo de groupe.",
+  "Faire avouer à quelqu’un une chanson honteuse qu’il adore.",
+  "Faire parler la table de ses pires repas de famille."
+];
+
+const PHRASES = {
+  Dinde: [
+    "Glou glou… Vous êtes sûr(e) de vous ? Une dinde sent les mensonges.",
+    "Avant que je finisse au four : c’est vraiment réussi ?",
+    "Je vous regarde droit dans les yeux. Mission accomplie, vraiment ?",
+    "Mes plumes frémissent. C’est fait pour de vrai ?",
+    "Une dinde honnête vaut mieux que deux dindes farcies. Alors ?",
+    "Pas de triche, hein ? Je compte sur vous.",
+    "Si vous mentez, je raconte tout à la sauce aux canneberges.",
+    "Glou ? Glou glou ? (Traduction : vous êtes certain(e) ?)",
+    "J’en ai vu, des choses, dans ma basse-cour. Vous l’avez vraiment faite ?",
+    "Je gonfle mes plumes de fierté… mais seulement si c’est vrai.",
+    "Mon petit cœur de dinde s’emballe. On valide ?",
+    "Juré, craché, sinon vous finissez en farce ?"
+  ],
+  Patate: [
+    "Hmm. Une patate ne s’emballe jamais. C’est vraiment réussi ?",
+    "Je suis une patate, mais je ne suis pas tombée de la dernière pluie.",
+    "Purée ou frites, il faut choisir. Et vous : fait ou pas fait ?",
+    "Mes yeux de patate vous scrutent. Vous êtes sûr(e) ?",
+    "Je germe d’impatience. On coche ?",
+    "Une patate ne ment jamais. Et vous ?",
+    "Si c’est faux, je me transforme en chips de déception.",
+    "Pas de patate chaude ici : vous assumez cette réussite ?",
+    "J’ai la peau dure, mais le cœur tendre. C’est fait ?",
+    "Gratin d’honneur à la clé : mission accomplie ?",
+    "Je roule pour vous… à condition que ce soit vrai.",
+    "Écrasez-moi si je me trompe : vous l’avez faite ?"
+  ]
+};
+const OUI = {
+  Dinde: ["Oui, glou-glou validé !", "Parole de dinde !", "C’est dans le sac !", "Oui, promis !"],
+  Patate: ["Oui, c’est dans la poche !", "Parole de patate !", "Fait et bien fait !", "Oui, promis !"]
+};
+const NON = ["Pas encore…", "Euh… presque", "Je retourne essayer"];
+
+const TEASERS = [
+  "Qui sourit quand le score monte ? Observez bien…",
+  "Un espion se cache peut-être juste à côté de vous.",
+  "Une mission d’équipe se cache parmi les dix. Laquelle ?",
+  "Méfiez-vous de ceux qui en font un peu trop…",
+  "Rien ne prouve que votre voisin est dans votre équipe."
+];
+
+/* =====================================================================
+   OUTILS
+   ===================================================================== */
+const $ = s => document.querySelector(s);
+const app = $("#app");
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const h = html => { app.innerHTML = html; window.scrollTo(0, 0); };
+const hasard = a => a[Math.floor(Math.random() * a.length)];
+const fr = s => String(s ?? "").replace(/ ([!?:;»])/g, "\u00a0$1").replace(/« /g, "«\u00a0");
+const nbOk = c => (c || []).filter(Boolean).length;
+const adverse = eq => eq === "Dinde" ? "Patate" : "Dinde";
+const couleurs = eq => eq === "Dinde" ? ["#d9572b", "#f2b134", "#a83d18", "#ffd9c2"] : ["#b8862f", "#f2d27a", "#86601d", "#6fa24a"];
+
+function stock(k, v){
+  try{
+    if(v === undefined) return localStorage.getItem(k);
+    if(v === null) localStorage.removeItem(k); else localStorage.setItem(k, v);
+  }catch(e){ return null; }
+}
+
+async function rpc(nom, args = {}){
+  let r;
+  try{
+    r = await fetch(CONFIG.SUPABASE_URL.replace(/\/$/, "") + "/rest/v1/rpc/" + nom, {
+      method: "POST",
+      headers: { "apikey": CONFIG.SUPABASE_CLE, "Content-Type": "application/json" },
+      body: JSON.stringify(args)
+    });
+  }catch(e){ throw new Error("Connexion impossible. Vérifiez le réseau."); }
+  const txt = await r.text();
+  let data = null;
+  try{ data = txt ? JSON.parse(txt) : null; }catch(e){}
+  if(!r.ok) throw new Error((data && data.message) || ("Erreur du serveur (" + r.status + ")."));
+  return data;
+}
+
+/* ---------- Confettis ---------- */
+function confettis(cols = ["#d9572b", "#b8862f", "#3f9150", "#f2c14e", "#7d4e2d"], n = 150){
+  const c = $("#confetti"), ctx = c.getContext("2d"), d = window.devicePixelRatio || 1;
+  const W = c.width = innerWidth * d, H = c.height = innerHeight * d;
+  const parts = Array.from({length: n}, () => ({
+    x: W / 2 + (Math.random() - .5) * W * .35, y: H * .4,
+    vx: (Math.random() - .5) * 20 * d, vy: (-Math.random() * 17 - 6) * d,
+    r: (5 + Math.random() * 7) * d, a: Math.random() * 6, va: (Math.random() - .5) * .3,
+    col: hasard(cols)
+  }));
+  const t0 = performance.now();
+  (function frame(t){
+    ctx.clearRect(0, 0, W, H);
+    parts.forEach(p => {
+      p.vy += .45 * d; p.vx *= .99; p.x += p.vx; p.y += p.vy; p.a += p.va;
+      ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.a);
+      ctx.fillStyle = p.col; ctx.fillRect(-p.r / 2, -p.r / 4, p.r, p.r / 2); ctx.restore();
+    });
+    if(t - t0 < 3400) requestAnimationFrame(frame); else ctx.clearRect(0, 0, W, H);
+  })(t0);
+}
+
+/* ---------- Mascottes ---------- */
+function yeux(x1, x2, y, humeur){
+  const oeil = (x, r = 5.5, p = 2.6, dx = 0) =>
+    `<circle cx="${x}" cy="${y}" r="${r}" fill="#fff" stroke="#2a1a10" stroke-width="1.6"/><circle cx="${x + dx}" cy="${y + .6}" r="${p}" fill="#2a1a10"/>`;
+  if(humeur === 1) return oeil(x1, 7, 2.2) + oeil(x2, 7, 2.2) +
+    `<path d="M${x1 - 6} ${y - 11} q6 -5 12 0 M${x2 - 6} ${y - 11} q6 -5 12 0" stroke="#2a1a10" stroke-width="2.2" fill="none" stroke-linecap="round"/>`;
+  if(humeur === 2) return `<path d="M${x1 - 5} ${y + 1} q5 -6 10 0" stroke="#2a1a10" stroke-width="2.8" fill="none" stroke-linecap="round"/>` + oeil(x2);
+  if(humeur === 3) return oeil(x1, 5.5, 2.6, 2.2) + oeil(x2, 5.5, 2.6, 2.2) +
+    `<path d="M${x1 - 7} ${y - 10} L${x1 + 6} ${y - 6} M${x2 + 7} ${y - 10} L${x2 - 6} ${y - 6}" stroke="#2a1a10" stroke-width="2.6" stroke-linecap="round"/>`;
+  return oeil(x1) + oeil(x2);
+}
+function mascotte(eq, humeur = 0, t = 96){
+  let c;
+  if(eq === "Dinde"){
+    const cols = ["#a83d18", "#e2702f", "#f2b134", "#e2702f", "#a83d18", "#e2702f", "#f2b134"];
+    const plumes = [-66, -44, -22, 0, 22, 44, 66].map((a, i) =>
+      `<ellipse cx="60" cy="30" rx="11" ry="27" fill="${cols[i]}" transform="rotate(${a} 60 74)"/>`).join("");
+    c = plumes +
+      `<path d="M50 100 l-4 9 M50 100 l0 10 M50 100 l4 9 M70 100 l-4 9 M70 100 l0 10 M70 100 l4 9" stroke="#f2a516" stroke-width="3" stroke-linecap="round"/>` +
+      `<ellipse cx="60" cy="78" rx="28" ry="25" fill="#8a5530"/>` +
+      `<ellipse cx="60" cy="85" rx="17" ry="14" fill="#b57a48"/>` +
+      `<ellipse cx="34" cy="80" rx="8" ry="14" fill="#6f4224" transform="rotate(18 34 80)"/>` +
+      `<ellipse cx="86" cy="80" rx="8" ry="14" fill="#6f4224" transform="rotate(-18 86 80)"/>` +
+      `<circle cx="60" cy="46" r="17" fill="#8a5530"/>` +
+      yeux(53, 67, 42, humeur) +
+      `<path d="M55 50 L65 50 L60 58 Z" fill="#f2a516"/>` +
+      `<path d="M63 55 q7 6 1 15 q-6 -4 -4 -13z" fill="#d7263d"/>`;
+  } else {
+    const bouche = [
+      `<path d="M51 78 q9 8 18 0" stroke="#2a1a10" stroke-width="2.6" fill="none" stroke-linecap="round"/>`,
+      `<ellipse cx="60" cy="80" rx="5.5" ry="6" fill="#5a1a1a"/>`,
+      `<path d="M52 79 q10 5 17 -3" stroke="#2a1a10" stroke-width="2.6" fill="none" stroke-linecap="round"/>`,
+      `<path d="M53 80 L67 79" stroke="#2a1a10" stroke-width="2.6" stroke-linecap="round"/>`
+    ][humeur] || "";
+    c = `<path d="M24 74 q-12 4 -14 -6 M96 74 q12 4 14 -6" stroke="#a77a3f" stroke-width="4" fill="none" stroke-linecap="round"/>` +
+      `<ellipse cx="46" cy="106" rx="9" ry="4.5" fill="#a77a3f"/><ellipse cx="74" cy="106" rx="9" ry="4.5" fill="#a77a3f"/>` +
+      `<path d="M24 70 Q20 34 60 32 Q102 34 98 70 Q98 104 60 104 Q22 104 24 70Z" fill="#d6a868" stroke="#a77a3f" stroke-width="2.5"/>` +
+      `<circle cx="38" cy="90" r="2.6" fill="#a77a3f"/><circle cx="86" cy="48" r="2.2" fill="#a77a3f"/><circle cx="82" cy="92" r="2" fill="#a77a3f"/><circle cx="36" cy="50" r="1.8" fill="#a77a3f"/>` +
+      `<path d="M58 33 q-3 -11 3 -17 M62 33 q5 -9 12 -10" stroke="#5c8a3a" stroke-width="3.5" fill="none" stroke-linecap="round"/>` +
+      `<ellipse cx="40" cy="74" rx="6" ry="3.5" fill="#f19c8a" opacity=".7"/><ellipse cx="80" cy="74" rx="6" ry="3.5" fill="#f19c8a" opacity=".7"/>` +
+      yeux(47, 73, 62, humeur) + bouche;
+  }
+  return `<svg viewBox="0 0 120 120" width="${t}" height="${t}" aria-hidden="true">${c}</svg>`;
+}
+
+/* ---------- Fenêtre de dialogue ---------- */
+function demander(o){
+  return new Promise(res => {
+    $("#boite").innerHTML =
+      `<div class="bob">${mascotte(o.equipe || "Dinde", o.humeur || 0, 124)}</div>` +
+      `<div class="bulle"></div>` +
+      `<div class="boutons">${o.non ? `<button class="fantome" id="m-non"></button>` : ""}<button class="${esc(o.equipe || "")}" id="m-oui"></button></div>`;
+    $("#boite .bulle").textContent = fr(o.texte);
+    $("#m-oui").textContent = o.oui || "D’accord";
+    $("#modal").classList.add("ouvert");
+    const fin = v => { $("#modal").classList.remove("ouvert"); res(v); };
+    $("#m-oui").onclick = () => fin(true);
+    if(o.non){ $("#m-non").textContent = o.non; $("#m-non").onclick = () => fin(false); }
+  });
+}
+const modalOuvert = () => $("#modal").classList.contains("ouvert");
+
+/* =====================================================================
+   GÉNÉRATION DES CARTES (dans le navigateur de l'organisatrice)
+   ===================================================================== */
+// GENERATION-DEBUT
+function melanger(a){
+  const b = a.slice();
+  for(let i = b.length - 1; i > 0; i--){ const j = Math.floor(Math.random() * (i + 1)); [b[i], b[j]] = [b[j], b[i]]; }
+  return b;
+}
+function remplir(modele, nom){
+  const voyelle = /^[AEIOUYÉÈÊÂaeiouyéèêâ]/.test(nom);
+  return modele.replace("de [X]", voyelle ? "d’" + nom : "de " + nom).replace("[X]", nom);
+}
+function tenterPartie(joueurs){
+  const ordre = melanger(joueurs);
+  const moitie = Math.ceil(ordre.length / 2);
+  const equipeDe = {};
+  ordre.forEach((j, i) => { equipeDe[j.cle] = i < moitie ? "Dinde" : "Patate"; });
+  const membres = eq => ordre.filter(j => equipeDe[j.cle] === eq);
+  const espions = {};
+  EQUIPES.forEach(eq => { const m = membres(eq); if(m.length >= 2) espions[eq] = m[Math.floor(Math.random() * m.length)].cle; });
+
+  const paires = new Set(), solos = new Set(), missionsEquipe = {};
+  const soloLibre = () => {
+    const libres = SOLOS.map((_, i) => i).filter(i => !solos.has(i));
+    if(!libres.length) return null;
+    const s = libres[Math.floor(Math.random() * libres.length)];
+    solos.add(s); return SOLOS[s];
+  };
+  for(const eq of EQUIPES){
+    const adv = membres(adverse(eq));
+    if(Math.random() < .5 && adv.length){
+      const m = Math.floor(Math.random() * MODELES.length);
+      const c = adv[Math.floor(Math.random() * adv.length)];
+      if(paires.has(m + "|" + c.cle)) return null;
+      paires.add(m + "|" + c.cle);
+      missionsEquipe[eq] = remplir(MODELES[m], c.nom);
+    } else {
+      const s = soloLibre(); if(!s) return null;
+      missionsEquipe[eq] = s;
+    }
+  }
+  const sortie = [];
+  for(const j of ordre){
+    const perso = [];
+    for(const m of melanger(MODELES.map((_, i) => i))){
+      if(perso.length === N_CIBLEES) break;
+      const c = melanger(joueurs.filter(x => x.cle !== j.cle)).find(x => !paires.has(m + "|" + x.cle));
+      if(!c) continue;
+      paires.add(m + "|" + c.cle);
+      perso.push(remplir(MODELES[m], c.nom));
+    }
+    if(perso.length < N_CIBLEES) return null;
+    for(let k = 0; k < N_SOLO; k++){ const s = soloLibre(); if(!s) return null; perso.push(s); }
+    const liste = melanger(perso);
+    const idx = Math.floor(Math.random() * (liste.length + 1));
+    liste.splice(idx, 0, missionsEquipe[equipeDe[j.cle]]);
+    sortie.push({ cle: j.cle, equipe: equipeDe[j.cle], espion: espions[equipeDe[j.cle]] === j.cle, missions: liste, idx_equipe: idx });
+  }
+  return { missions_equipe: missionsEquipe, joueurs: sortie };
+}
+function genererPartie(joueurs){
+  for(let essai = 0; essai < 500; essai++){ const r = tenterPartie(joueurs); if(r) return r; }
+  throw new Error("Impossible de répartir les missions : ajoutez des missions sans cible dans le fichier.");
+}
+function calculerScores(t){
+  const sc = {}, par = {};
+  EQUIPES.forEach(eq => { sc[eq] = { missions: 0, devinette: 0, coequipiers: 0, espion: 0, total: 0 }; });
+  (t.joueurs || []).forEach(j => { par[j.cle] = j; });
+  (t.joueurs || []).forEach(j => {
+    if(!sc[j.equipe]) return;
+    const s = sc[j.equipe];
+    s.missions += j.reussies;
+    if(j.mission_ok) s.devinette += 3;
+    (j.coequipiers || []).forEach(k => {
+      const o = par[k]; if(!o || !sc[o.equipe]) return;
+      if(o.equipe === j.equipe) s.coequipiers += 1;
+      else { s.coequipiers -= 1; if(o.espion) sc[o.equipe].espion += 2; }
+    });
+  });
+  EQUIPES.forEach(eq => { const s = sc[eq]; s.total = s.missions + s.devinette + s.coequipiers + s.espion; });
+  return sc;
+}
+// GENERATION-FIN
+
+/* =====================================================================
+   CÔTÉ JOUEUR
+   ===================================================================== */
+let J = null, codeJoueur = stock("dp-code"), minuteur = null, enRotation = false;
+const fileP = { Dinde: [], Patate: [] };
+const phrase = eq => { if(!fileP[eq].length) fileP[eq] = melanger(PHRASES[eq]); return fileP[eq].pop(); };
+
+async function demarrerJoueur(){
+  if(!codeJoueur) return ecranConnexion();
+  h(`<p class="centre sous" style="margin-top:40vh">Chargement…</p>`);
+  try{ J = await rpc("jeu_connexion", { p_code: codeJoueur }); }
+  catch(e){
+    if(/Code inconnu/.test(e.message)){ stock("dp-code", null); codeJoueur = null; }
+    return ecranConnexion(e.message);
+  }
+  afficherJoueur(); surveiller();
+}
+
+function afficherJoueur(){
+  if(J.phase === "attente") return ecranAttente();
+  if(!J.roue) return ecranRoue();
+  if(J.phase === "missions") return ecranMissions();
+  if(J.phase === "vote") return ecranVote();
+  return ecranFin();
+}
+
+function surveiller(){
+  clearInterval(minuteur);
+  minuteur = setInterval(async () => {
+    if(modalOuvert() || enRotation || !codeJoueur) return;
+    try{
+      const n = await rpc("jeu_connexion", { p_code: codeJoueur });
+      const change = n.phase !== J.phase;
+      J = n;
+      if(change) afficherJoueur();
+    }catch(e){}
+  }, 10000);
+}
+
+function boutonSortie(){
+  const b = $("#sortir");
+  if(b) b.onclick = async () => {
+    const ok = await demander({ equipe: J && J.equipe || "Patate", humeur: 1, texte: "Vous voulez changer de joueur ? Il faudra ressaisir un code.", oui: "Oui, changer", non: "Non, rester" });
+    if(!ok) return;
+    stock("dp-code", null); codeJoueur = null; J = null; clearInterval(minuteur); ecranConnexion();
+  };
+}
+
+function ecranConnexion(err){
+  h(`<div class="centre">
+       <div class="duo"><span class="bob">${mascotte("Dinde", 0, 112)}</span><span class="bob2">${mascotte("Patate", 2, 112)}</span></div>
+       <h1>Dinde ou Patate ?</h1>
+       <p class="sous">Le grand jeu des missions secrètes de Thanksgiving</p>
+     </div>
+     <div class="carte" id="formulaire">
+       <label for="code">Votre code secret</label>
+       <input id="code" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Le code que l’on vous a remis">
+       <p style="margin:14px 0 0"><button id="go" class="Dinde" style="width:100%">Entrer dans la partie</button></p>
+       <p class="erreur" id="err"></p>
+     </div>`);
+  $("#err").textContent = err || "";
+  const go = async () => {
+    const code = $("#code").value.trim();
+    if(!code) return;
+    $("#go").disabled = true;
+    try{
+      J = await rpc("jeu_connexion", { p_code: code });
+      codeJoueur = code; stock("dp-code", code);
+      afficherJoueur(); surveiller();
+    }catch(e){
+      $("#err").textContent = e.message; $("#go").disabled = false;
+      const f = $("#formulaire"); f.classList.remove("secoue"); void f.offsetWidth; f.classList.add("secoue");
+    }
+  };
+  $("#go").onclick = go;
+  $("#code").onkeydown = e => { if(e.key === "Enter") go(); };
+}
+
+function ecranAttente(){
+  h(`<div class="centre" style="margin-top:8vh">
+       <div class="duo"><span class="bob">${mascotte("Dinde", 3, 120)}</span><span class="bob2">${mascotte("Patate", 3, 120)}</span></div>
+       <h1>Bonjour ${esc(J.nom)} !</h1>
+       <p class="sous">La partie n’a pas encore commencé. Gardez cette page ouverte : elle s’actualisera toute seule dès que les cartes seront distribuées.</p>
+       <p><button class="fantome" id="sortir">Ce n’est pas moi</button></p>
+     </div>`);
+  boutonSortie();
+}
+
+function svgRoue(){
+  let s = "";
+  const pt = a => { const r = a * Math.PI / 180; return [150 + 150 * Math.sin(r), 150 - 150 * Math.cos(r)]; };
+  for(let i = 0; i < 8; i++){
+    const [x0, y0] = pt(i * 45), [x1, y1] = pt((i + 1) * 45), eq = i % 2 ? "Patate" : "Dinde";
+    s += `<path d="M150 150 L${x0} ${y0} A150 150 0 0 1 ${x1} ${y1} Z" fill="${eq === "Dinde" ? "#d9572b" : "#c99a43"}" stroke="#fff" stroke-width="3"/>`;
+    s += `<text transform="rotate(${i * 45 + 22.5} 150 150)" x="150" y="52" fill="#fff" font-family="Fredoka, sans-serif" font-weight="700" font-size="19" text-anchor="middle">${eq}</text>`;
+  }
+  s += `<circle cx="150" cy="150" r="30" fill="#fff"/><circle cx="150" cy="150" r="24" fill="#3a2416"/><text x="150" y="159" fill="#fff" font-family="Fredoka, sans-serif" font-weight="700" font-size="26" text-anchor="middle">?</text>`;
+  return `<svg id="roue" viewBox="0 0 300 300">${s}</svg>`;
+}
+
+function ecranRoue(){
+  h(`<div class="centre">
+       <h1>À vous, ${esc(J.nom)} !</h1>
+       <p class="sous">Lancez la roue pour découvrir votre équipe. Gardez l’écran pour vous…</p>
+       <div class="roue-zone">
+         <svg class="fleche" width="40" height="44" viewBox="0 0 40 44"><path d="M4 4 H36 L20 40 Z" fill="#3a2416" stroke="#fff" stroke-width="3" stroke-linejoin="round"/></svg>
+         ${svgRoue()}
+       </div>
+       <button id="lancer" class="Dinde" style="min-width:70%">Lancer la roue !</button>
+     </div>`);
+  $("#lancer").onclick = () => {
+    enRotation = true;
+    $("#lancer").disabled = true; $("#lancer").textContent = "Ça tourne…";
+    const segs = [0, 2, 4, 6].map(i => J.equipe === "Dinde" ? i : i + 1);
+    const centre = hasard(segs) * 45 + 22.5 + (Math.random() - .5) * 30;
+    $("#roue").style.transform = `rotate(${360 * 7 - centre}deg)`;
+    rpc("jeu_tourner", { p_code: codeJoueur }).catch(() => {});
+    setTimeout(() => { J.roue = true; enRotation = false; ecranEquipe(); }, 5500);
+  };
+}
+
+function ecranEquipe(){
+  const eq = J.equipe;
+  h(`<div class="centre" style="margin-top:6vh">
+       <p class="sous" style="font-size:1.2rem;margin:0">Vous êtes dans l’équipe…</p>
+       <h1 class="pop" style="font-size:3.4rem;color:${eq === "Dinde" ? "var(--dinde)" : "var(--patate)"}">${eq} !</h1>
+       <div class="pop bob" style="animation-delay:.2s">${mascotte(eq, 2, 190)}</div>
+       <p class="sous">Ne dites rien à personne. Vos coéquipiers devront vous démasquer.</p>
+       <button id="suite" class="${eq}" style="min-width:70%">${J.espion ? "Attendez… une enveloppe est arrivée" : "Découvrir mes missions"}</button>
+     </div>`);
+  confettis(couleurs(eq));
+  $("#suite").onclick = () => J.espion ? ecranEspion() : afficherJoueur();
+}
+
+function ecranEspion(){
+  h(`<div class="dossier centre" style="margin-top:6vh;padding:28px 20px">
+       <div style="font-size:3rem">✉️</div>
+       <h1>Enveloppe confidentielle</h1>
+       <p style="opacity:.8">À n’ouvrir qu’à l’abri des regards.</p>
+       <button id="ouvrir">Ouvrir l’enveloppe</button>
+     </div>`);
+  $("#ouvrir").onclick = () => {
+    h(`<div class="dossier pop" style="margin-top:4vh;padding:26px 20px">
+         <div class="centre"><span class="tampon">ESPION</span></div>
+         <h1 class="centre" style="margin-top:16px">Vous êtes l’espion de l’équipe ${esc(J.equipe)}</h1>
+         <p>Vous connaissez la mission secrète de l’équipe ${esc(adverse(J.equipe))} :</p>
+         <div class="intel"></div>
+         <p>Faites semblant de l’accomplir sous leurs yeux. S’ils vous croient de leur côté, ils voteront pour vous comme coéquipier : chaque adversaire trompé rapporte <strong>2 points</strong> à votre équipe.</p>
+         <p style="opacity:.8">Rien ne vous oblige à vous dévoiler, même auprès de votre propre équipe.</p>
+         <p class="centre"><button id="ok">Compris, à mes missions</button></p>
+       </div>`);
+    $(".intel").textContent = fr("« " + String(J.intel || "").replace(/\.$/, "") + " »");
+    $("#ok").onclick = afficherJoueur;
+  };
+}
+
+function reglesHTML(){
+  return `<details class="carte"><summary>Rappel des règles</summary><ul>
+    <li>Chaque mission réussie rapporte 1 point à votre équipe. Le score s’affiche à l’écran, sans les noms.</li>
+    <li>L’une de vos dix missions est commune à toute votre équipe. Au moment du vote, la reconnaître rapporte 3 points.</li>
+    <li>Vous voterez aussi pour vos coéquipiers : +1 par bonne réponse, −1 par erreur.</li>
+    <li>Chaque équipe cache un espion qui connaît la mission de l’équipe adverse. Chaque adversaire qu’il parvient à tromper rapporte 2 points à son équipe.</li>
+    <li>Astuce : soyez discret. Si l’on vous voit accomplir une mission, on devinera peut-être votre équipe.</li>
+  </ul></details>`;
+}
+
+function dossierHTML(){
+  return `<div class="dossier"><div style="display:flex;justify-content:space-between;align-items:center;gap:10px">
+      <span><span class="tampon" style="font-size:.85rem">ESPION</span>&nbsp; Dossier confidentiel</span>
+      <button id="voir-dossier" style="padding:8px 14px">Ouvrir</button></div>
+      <div id="contenu-dossier" style="display:none">
+        <p style="margin:12px 0 0">Mission de l’équipe ${esc(adverse(J.equipe))}, à mimer sous leurs yeux :</p>
+        <div class="intel" id="intel-txt"></div>
+      </div></div>`;
+}
+
+function ecranMissions(){
+  const eq = J.equipe, nb = nbOk(J.cases), tot = J.missions.length;
+  h(`<div class="bandeau ${eq}">
+       <div class="bob">${mascotte(eq, nb === tot ? 2 : 0, 86)}</div>
+       <div style="flex:1">
+         <div style="opacity:.9">${esc(J.nom)}, vous êtes dans l’équipe</div>
+         <h1>${eq}</h1>
+         <div class="jauge"><div style="width:${nb / tot * 100}%"></div></div>
+         <div style="margin-top:6px;font-weight:600">${nb} / ${tot} missions réussies</div>
+       </div>
+     </div>
+     ${J.espion ? dossierHTML() : ""}
+     <div class="carte">
+       <h2>Vos missions</h2>
+       <p class="sous" style="margin-bottom:4px">L’une d’elles est la mission secrète de votre équipe. Saurez-vous la reconnaître ?</p>
+       <div id="liste"></div>
+     </div>
+     ${reglesHTML()}
+     <p class="centre"><button class="fantome" id="sortir">Changer de joueur</button></p>`);
+  boutonSortie();
+  if(J.espion){
+    $("#intel-txt").textContent = fr(J.intel);
+    $("#voir-dossier").onclick = () => {
+      const c = $("#contenu-dossier"), ouvert = c.style.display !== "none";
+      c.style.display = ouvert ? "none" : "block";
+      $("#voir-dossier").textContent = ouvert ? "Ouvrir" : "Refermer";
+    };
+  }
+  const L = $("#liste");
+  J.missions.forEach((m, i) => {
+    const ok = !!J.cases[i];
+    const ligne = document.createElement("div");
+    ligne.className = "mission" + (ok ? " faite" : "");
+    ligne.innerHTML = `<span class="num">${i + 1}</span><span class="txt"></span><button class="case ${ok ? "ok" : ""}" aria-label="${ok ? "Décocher" : "Cocher"} la mission ${i + 1}">${ok ? "✓" : ""}</button>`;
+    ligne.querySelector(".txt").textContent = fr(m);
+    ligne.querySelector(".case").onclick = () => basculer(i, !ok);
+    L.appendChild(ligne);
+  });
+}
+
+async function basculer(i, valeur){
+  const eq = J.equipe;
+  const ok = valeur
+    ? await demander({ equipe: eq, humeur: Math.floor(Math.random() * 4), texte: phrase(eq), oui: hasard(OUI[eq]), non: hasard(NON) })
+    : await demander({ equipe: eq, humeur: 1, texte: "Oups ! On décoche cette mission ?", oui: "Oui, décocher", non: "Non, je la garde" });
+  if(!ok) return;
+  try{
+    J.cases = await rpc("jeu_cocher", { p_code: codeJoueur, p_index: i, p_valeur: valeur });
+  }catch(e){
+    await demander({ equipe: eq, humeur: 1, texte: e.message, oui: "D’accord" });
+    try{ J = await rpc("jeu_connexion", { p_code: codeJoueur }); }catch(_){}
+    return afficherJoueur();
+  }
+  ecranMissions();
+  if(valeur){
+    if(nbOk(J.cases) === J.missions.length){
+      confettis(couleurs(eq), 260);
+      demander({ equipe: eq, humeur: 2, texte: "Dix sur dix ! Votre équipe vous doit une part de tarte.", oui: "Merci !" });
+    } else confettis(couleurs(eq), 90);
+  }
+}
+
+function ecranVote(){
+  const eq = J.equipe, n = J.taille_equipe - 1;
+  let choixMission = J.vote_mission, choixCo = (J.vote_coequipiers || []).slice();
+  h(`<div class="bandeau ${eq}">
+       <div class="bob">${mascotte(eq, 3, 86)}</div>
+       <div><div style="opacity:.9">Équipe ${eq}</div><h1>L’heure du vote !</h1></div>
+     </div>
+     ${J.vote_mission != null ? `<div class="carte centre pop"><strong>Vote enregistré.</strong> Vous pouvez le modifier jusqu’à l’annonce des résultats.</div>` : ""}
+     <div class="carte">
+       <h2>1. La mission de votre équipe</h2>
+       <p class="sous">Laquelle de vos missions est commune à toute votre équipe ? Bonne réponse : +3 points.</p>
+       <div id="vm"></div>
+     </div>
+     <div class="carte">
+       <h2>2. Vos coéquipiers</h2>
+       <p class="sous">Choisissez exactement ${n} personne${n > 1 ? "s" : ""}. +1 par bonne réponse, −1 par erreur. Attention aux espions !</p>
+       <div class="puces" id="vc"></div>
+     </div>
+     <p class="erreur centre" id="err"></p>
+     <p class="centre"><button class="${eq}" id="valider" style="min-width:70%">${J.vote_mission != null ? "Modifier mon vote" : "Valider mon vote"}</button></p>`);
+  const vm = $("#vm");
+  J.missions.forEach((m, i) => {
+    const d = document.createElement("div");
+    d.className = "choix" + (choixMission === i ? " actif" : "");
+    d.innerHTML = `<span class="rond"></span><span></span>`;
+    d.lastChild.textContent = fr(m);
+    d.onclick = () => { choixMission = i; vm.querySelectorAll(".choix").forEach((x, k) => x.classList.toggle("actif", k === i)); };
+    vm.appendChild(d);
+  });
+  const vc = $("#vc");
+  J.autres.forEach(a => {
+    const b = document.createElement("button");
+    b.className = "puce" + (choixCo.includes(a.cle) ? " actif" : "");
+    b.textContent = a.nom;
+    b.onclick = () => {
+      if(choixCo.includes(a.cle)) choixCo = choixCo.filter(k => k !== a.cle);
+      else if(choixCo.length < n) choixCo.push(a.cle);
+      else { $("#err").textContent = `Vous avez déjà choisi ${n} personne${n > 1 ? "s" : ""}. Retirez-en une d’abord.`; return; }
+      $("#err").textContent = "";
+      b.classList.toggle("actif", choixCo.includes(a.cle));
+    };
+    vc.appendChild(b);
+  });
+  $("#valider").onclick = async () => {
+    if(choixMission == null){ $("#err").textContent = "Choisissez d’abord la mission de votre équipe."; return; }
+    if(choixCo.length !== n){ $("#err").textContent = `Choisissez exactement ${n} coéquipier${n > 1 ? "s" : ""}.`; return; }
+    $("#valider").disabled = true;
+    try{
+      await rpc("jeu_voter", { p_code: codeJoueur, p_mission: choixMission, p_coequipiers: choixCo });
+      J.vote_mission = choixMission; J.vote_coequipiers = choixCo;
+      confettis(couleurs(eq), 110);
+      await demander({ equipe: eq, humeur: 2, texte: "Vote enregistré ! Maintenant, prenez votre air le plus innocent.", oui: "Parfait" });
+      ecranVote();
+    }catch(e){
+      $("#err").textContent = e.message; $("#valider").disabled = false;
+      if(/pas ouvert/.test(e.message)){ try{ J = await rpc("jeu_connexion", { p_code: codeJoueur }); afficherJoueur(); }catch(_){} }
+    }
+  };
+}
+
+function ecranFin(){
+  h(`<div class="centre" style="margin-top:8vh">
+       <div class="duo"><span class="bob">${mascotte("Dinde", 1, 120)}</span><span class="bob2">${mascotte("Patate", 1, 120)}</span></div>
+       <h1>Les jeux sont faits !</h1>
+       <p class="sous" style="font-size:1.2rem">Levez les yeux vers l’écran : les résultats arrivent.</p>
+     </div>`);
+}
+
+/* =====================================================================
+   ÉCRAN DE PROJECTION (#ecran)
+   ===================================================================== */
+let T = null, minuteurEcran = null, etape = 0, teaserIdx = 0;
+
+async function demarrerEcran(){
+  app.classList.add("large");
+  h(`<div id="ecran"><p class="centre sous" style="margin-top:40vh">Chargement…</p></div>`);
+  T = null; etape = 0;
+  document.onkeydown = e => {
+    if(T && T.phase === "resultats" && (e.key === " " || e.key === "ArrowRight" || e.key === "Enter")){ e.preventDefault(); etapeSuivante(); }
+  };
+  await tickEcran();
+  minuteurEcran = setInterval(tickEcran, 5000);
+}
+
+function depuis(iso){
+  const s = Math.max(0, (new Date(T.maintenant) - new Date(iso)) / 1000);
+  if(s < 60) return "à l’instant";
+  const m = Math.round(s / 60);
+  return m < 60 ? `il y a ${m} min` : `il y a ${Math.floor(m / 60)} h ${String(m % 60).padStart(2, "0")}`;
+}
+
+async function tickEcran(){
+  let t;
+  try{ t = await rpc("jeu_tableau"); }
+  catch(e){
+    if(!T){ $("#ecran").innerHTML = `<p class="centre erreur" style="margin-top:30vh"></p>`; $("#ecran p").textContent = e.message; }
+    return;
+  }
+  const ancien = T; T = t;
+  if(t.phase === "resultats"){
+    if(!ancien || ancien.phase !== "resultats"){ etape = 0; dessinerResultats(); }
+    return;
+  }
+  dessinerTableau(ancien);
+}
+
+function dessinerTableau(ancien){
+  const t = T;
+  let etat = "";
+  if(t.phase === "attente") etat = "La partie va bientôt commencer…";
+  else if(t.phase === "missions") etat = t.nb_roue < t.nb_joueurs ? `Missions en cours · ${t.nb_roue} / ${t.nb_joueurs} joueurs ont tourné la roue` : "Missions en cours";
+  else if(t.phase === "vote") etat = `Le vote est ouvert ! ${t.nb_votes} / ${t.nb_joueurs} ont voté`;
+  if(Math.random() < .2) teaserIdx = (teaserIdx + 1) % TEASERS.length;
+
+  const carteEq = eq => `<div class="equipe ${eq}" id="eq-${eq}">
+      <div class="bob${eq === "Patate" ? "2" : ""}">${mascotte(eq, 0, 150)}</div>
+      <h2>Équipe ${eq}</h2>
+      <div class="score">${t.equipes[eq]}</div>
+      <div style="font-size:1.3rem;opacity:.9">mission${t.equipes[eq] > 1 ? "s" : ""} réussie${t.equipes[eq] > 1 ? "s" : ""}</div>
+    </div>`;
+  const evts = (t.evenements || []).map(e =>
+    `<li><span class="pastille" style="background:${e.equipe === "Dinde" ? "var(--dinde)" : "var(--patate)"}"></span>L’équipe ${esc(e.equipe)} marque un point <span style="color:var(--doux)">· ${depuis(e.quand)}</span></li>`).join("");
+
+  $("#ecran").innerHTML = `
+    <h1 class="ecran-titre">Dinde ou Patate ?</h1>
+    <p class="etat">${etat}</p>
+    <div class="equipes">${carteEq("Dinde")}${carteEq("Patate")}</div>
+    <div class="carte fil"><h2>Dernières missions réussies</h2>
+      ${evts ? `<ul>${evts}</ul>` : `<p class="sous" style="margin:0">Aucune pour l’instant. Qui ouvrira le score ?</p>`}</div>
+    <p class="teaser">${esc(TEASERS[teaserIdx])}</p>`;
+
+  if(ancien && ancien.phase === t.phase){
+    EQUIPES.forEach(eq => {
+      if(t.equipes[eq] > ancien.equipes[eq]){
+        const el = $("#eq-" + eq); el.classList.add("flash");
+        confettis(couleurs(eq), 120);
+      }
+    });
+  }
+}
+
+const ETAPES = 6;
+function etapeSuivante(){ if(etape < ETAPES - 1){ etape++; dessinerResultats(); } }
+
+function dessinerResultats(){
+  const t = T, sc = calculerScores(t), js = t.joueurs || [];
+  const noms = eq => js.filter(j => j.equipe === eq);
+  let c = "";
+  if(etape === 0){
+    c = `<div class="duo"><span class="bob">${mascotte("Dinde", 1, 170)}</span><span class="bob2">${mascotte("Patate", 1, 170)}</span></div>
+         <h1>Place aux résultats !</h1>
+         <p class="grande">Missions d’équipe, espions, équipes… tout va être révélé.</p>`;
+  } else if(etape === 1){
+    c = `<h1>Les missions d’équipe</h1><div class="equipes">${EQUIPES.map(eq => `
+           <div class="equipe ${eq} pop"><h2>Équipe ${eq}</h2><p class="grande mission-eq" data-eq="${eq}"></p>
+           <p style="font-size:1.2rem">${noms(eq).filter(j => j.mission_ok).length} / ${noms(eq).length} l’ont reconnue</p></div>`).join("")}</div>`;
+  } else if(etape === 2){
+    c = `<h1>Les espions étaient…</h1><div class="equipes">${EQUIPES.map(eq => {
+           const e = noms(eq).find(j => j.espion);
+           const dupes = js.filter(j => j.equipe !== eq && (j.coequipiers || []).includes(e && e.cle)).length;
+           return `<div class="dossier pop" style="padding:28px"><span class="tampon">ESPION</span>
+             <h2 style="font-size:2.4rem;margin:16px 0 6px">${esc(e ? e.nom : "Personne")}</h2>
+             <p class="grande" style="margin:0">pour l’équipe ${eq}</p>
+             <p style="font-size:1.2rem;opacity:.85">${dupes} adversaire${dupes > 1 ? "s" : ""} trompé${dupes > 1 ? "s" : ""}</p></div>`;
+         }).join("")}</div>`;
+  } else if(etape === 3){
+    c = `<h1>Les équipes</h1><div class="equipes">${EQUIPES.map(eq => `
+           <div class="equipe ${eq} pop"><div>${mascotte(eq, 2, 110)}</div><h2>Équipe ${eq}</h2>
+           <p class="grande">${noms(eq).map(j => esc(j.nom) + (j.espion ? " 🕵️" : "")).join("<br>")}</p></div>`).join("")}</div>`;
+  } else if(etape === 4){
+    const ligne = (lib, k) => `<tr><td>${lib}</td>${EQUIPES.map(eq => `<td class="n">${sc[eq][k] > 0 && k !== "missions" ? "+" : ""}${sc[eq][k]}</td>`).join("")}</tr>`;
+    c = `<h1>Le décompte</h1><div class="carte pop"><table>
+           <tr><th></th>${EQUIPES.map(eq => `<th class="n" style="color:${eq === "Dinde" ? "var(--dinde)" : "var(--patate)"}">${eq}</th>`).join("")}</tr>
+           ${ligne("Missions réussies", "missions")}
+           ${ligne("Mission d’équipe reconnue (+3 chacun)", "devinette")}
+           ${ligne("Coéquipiers identifiés (+1 / −1)", "coequipiers")}
+           ${ligne("Adversaires trompés par l’espion (+2)", "espion")}
+           <tr class="total"><td>Total</td>${EQUIPES.map(eq => `<td class="n">${sc[eq].total}</td>`).join("")}</tr>
+         </table></div>`;
+  } else {
+    const [a, b] = EQUIPES, g = sc[a].total === sc[b].total ? null : (sc[a].total > sc[b].total ? a : b);
+    c = g
+      ? `<div class="pop bob">${mascotte(g, 2, 240)}</div><h1>L’équipe ${g} l’emporte !</h1>
+         <p class="grande">${sc[g].total} points contre ${sc[adverse(g)].total}. Bravo à ${noms(g).map(j => esc(j.nom)).join(", ")} !</p>`
+      : `<div class="duo"><span class="bob pop">${mascotte("Dinde", 2, 190)}</span><span class="bob2 pop">${mascotte("Patate", 2, 190)}</span></div>
+         <h1>Égalité parfaite !</h1><p class="grande">${sc[a].total} points partout. La dinde et la patate partagent la tarte.</p>`;
+  }
+  $("#ecran").innerHTML = `<div class="revel">${c}
+    ${etape < ETAPES - 1 ? `<p style="margin-top:30px"><button id="suivant" class="Dinde" style="font-size:1.3rem;padding:16px 30px">Révéler la suite</button></p>
+    <p class="sous">ou appuyez sur la barre d’espace</p>` : ""}</div>`;
+  document.querySelectorAll(".mission-eq").forEach(el => { el.textContent = fr((t.missions_equipe || {})[el.dataset.eq]); });
+  const s = $("#suivant"); if(s) s.onclick = etapeSuivante;
+  if(etape === ETAPES - 1) setTimeout(() => confettis(undefined, 320), 200);
+}
+
+/* =====================================================================
+   COULISSES DE L'ORGANISATRICE (#admin)
+   ===================================================================== */
+let codeAdmin = stock("dp-admin"), minuteurAdmin = null;
+const LIBELLES = { attente: "En attente de distribution", missions: "Missions en cours", vote: "Vote ouvert", resultats: "Résultats affichés" };
+
+async function demarrerAdmin(){
+  if(!codeAdmin) return ecranAdminConnexion();
+  try{ ecranAdmin(await rpc("jeu_admin_etat", { p_admin: codeAdmin })); }
+  catch(e){ stock("dp-admin", null); codeAdmin = null; return ecranAdminConnexion(e.message); }
+  clearInterval(minuteurAdmin);
+  minuteurAdmin = setInterval(async () => {
+    if(modalOuvert()) return;
+    try{ ecranAdmin(await rpc("jeu_admin_etat", { p_admin: codeAdmin })); }catch(e){}
+  }, 8000);
+}
+
+function ecranAdminConnexion(err){
+  h(`<h1>Coulisses</h1><p class="sous">Espace réservé à l’organisatrice.</p>
+     <div class="carte"><label for="ca">Code organisatrice</label><input id="ca" type="password" autocomplete="off">
+     <p style="margin:14px 0 0"><button id="go">Entrer</button></p><p class="erreur" id="err"></p></div>
+     <p><a href="#">Page des joueurs</a> · <a href="#ecran">Écran de projection</a></p>`);
+  $("#err").textContent = err || "";
+  const go = () => { const v = $("#ca").value.trim(); if(!v) return; codeAdmin = v; stock("dp-admin", v); demarrerAdmin(); };
+  $("#go").onclick = go;
+  $("#ca").onkeydown = e => { if(e.key === "Enter") go(); };
+}
+
+function ecranAdmin(e){
+  const roue = e.joueurs.filter(j => j.roue).length, votes = e.joueurs.filter(j => j.a_vote).length;
+  const actions = {
+    attente:   [["distribuer", "Distribuer les cartes", "Dinde"]],
+    missions:  [["vote", "Ouvrir le vote", "Dinde"], ["redistribuer", "Redistribuer les cartes", "danger"]],
+    vote:      [["resultats", "Afficher les résultats", "Dinde"], ["missions", "Rouvrir les missions", "fantome"]],
+    resultats: [["vote", "Revenir au vote", "fantome"], ["reinit", "Préparer une nouvelle partie", "danger"]]
+  }[e.phase] || [];
+  if(e.phase !== "attente" && e.phase !== "resultats") actions.push(["reinit", "Tout réinitialiser", "danger"]);
+  h(`<h1>Coulisses</h1>
+     <p class="sous">Aucune information secrète n’est affichée ici : vous pouvez jouer sans risque.</p>
+     <div class="carte"><h2>${LIBELLES[e.phase] || e.phase}</h2>
+       <p style="margin:0">${roue} / ${e.joueurs.length} joueurs ont tourné la roue · ${votes} / ${e.joueurs.length} ont voté</p></div>
+     <div class="carte"><h2>Actions</h2><div class="boutons" style="justify-content:flex-start" id="actions"></div><p class="erreur" id="err"></p></div>
+     <div class="carte"><h2>Joueurs</h2><table class="admin-table">
+       <tr><th>Prénom</th><th class="n">Roue</th><th class="n">Vote</th></tr>
+       ${e.joueurs.map(j => `<tr><td>${esc(j.nom)}</td><td class="n">${j.roue ? "✓" : "·"}</td><td class="n">${j.a_vote ? "✓" : "·"}</td></tr>`).join("")}
+     </table></div>
+     <p><a href="#ecran">Ouvrir l’écran de projection</a> · <a href="#">Page des joueurs</a> · <a href="#" id="deco">Se déconnecter</a></p>`);
+  $("#deco").onclick = ev => { ev.preventDefault(); stock("dp-admin", null); codeAdmin = null; clearInterval(minuteurAdmin); ecranAdminConnexion(); };
+  const zone = $("#actions");
+  actions.forEach(([id, lib, cls]) => {
+    const b = document.createElement("button");
+    b.className = cls; b.textContent = lib;
+    b.onclick = () => action(id, e);
+    zone.appendChild(b);
+  });
+}
+
+async function action(id, e){
+  const conf = {
+    distribuer: "Je distribue les cartes ? Les invités pourront tourner la roue juste après.",
+    redistribuer: "Redistribuer efface les équipes, les missions cochées et les votes. On recommence vraiment ?",
+    vote: "J’ouvre le vote ? Les invités ne pourront plus cocher de missions.",
+    missions: "Je rouvre les missions ? Les votes déjà faits sont conservés.",
+    resultats: "J’affiche les résultats ? Tout sera révélé sur l’écran de projection.",
+    reinit: "Tout réinitialiser ? La partie repart de zéro, en attente de distribution."
+  }[id];
+  const ok = await demander({ equipe: "Dinde", humeur: 1, texte: conf, oui: "Oui, allons-y", non: "Annuler" });
+  if(!ok) return;
+  try{
+    if(id === "distribuer" || id === "redistribuer"){
+      const p = genererPartie(e.joueurs.map(j => ({ cle: j.cle, nom: j.nom })));
+      await rpc("jeu_admin_distribuer", { p_admin: codeAdmin, p_donnees: p });
+      confettis();
+    } else if(id === "reinit"){
+      await rpc("jeu_admin_reinitialiser", { p_admin: codeAdmin });
+    } else {
+      await rpc("jeu_admin_phase", { p_admin: codeAdmin, p_phase: id });
+    }
+    ecranAdmin(await rpc("jeu_admin_etat", { p_admin: codeAdmin }));
+  }catch(err){ const z = $("#err"); if(z) z.textContent = err.message; }
+}
+
+/* =====================================================================
+   DÉMARRAGE
+   ===================================================================== */
+function router(){
+  clearInterval(minuteur); clearInterval(minuteurEcran); clearInterval(minuteurAdmin);
+  document.onkeydown = null; app.classList.remove("large");
+  if(location.hash === "#ecran") return demarrerEcran();
+  if(location.hash === "#admin") return demarrerAdmin();
+  demarrerJoueur();
+}
+window.addEventListener("hashchange", router);
+
+if(CONFIG.SUPABASE_URL.includes("VOTRE-PROJET")){
+  h(`<div class="carte" style="margin-top:10vh"><h1>Configuration manquante</h1>
+     <p>Ouvrez ce fichier dans un éditeur de texte et renseignez <strong>SUPABASE_URL</strong> et <strong>SUPABASE_CLE</strong>, tout en haut de la partie script.</p></div>`);
+} else {
+  router();
+}
+</script>
+</body>
+</html>
